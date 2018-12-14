@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        
+        <title>Air Quality, San Francisco Bay Area</title>
+
+        <!-- Leaflet CSS & JS-->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+
+        <!-- d3 JavaScript -->
+        <script src="https://d3js.org/d3.v4.min.js"></script>
+
+
+        <!-- GroupLayers -->
+        <!-- <link rel='stylesheet' href='https://skeate.github.io/Leaflet.timeline/stylesheets/leaflet.timeline.css'> -->
+        <link rel="stylesheet" href="src/leaflet.groupedlayercontrol.css" />
+        
+        <script>
+            ACCESS_TOKEN = 'pk.eyJ1IjoiZ3VhcG9yZSIsImEiOiJjanBnMWc1emYwZmxzM3dxaG95YjlpeG44In0.ZCll_-ScQC2V8JMVila5HA';
+            MB_ATTR = 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+                '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>';
+            MB_URL = 'https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + ACCESS_TOKEN;
+            OSM_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+            OSM_ATTRIB = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+        </script>
+
+        <style>
+            #map {
+                width: 600px;
+                height: 700px;
+            }
+        </style>
+
+        </head>
+        <body>
+        <!-- The div where we will inject our map -->
+        <div id="map"></div>
+        <!-- <script src="data/airnowData.js"></script> -->
+        <script src="data/PM25.js"></script>
+        <script src="data/O3.js"></script>
+        <script src="data/perimeterSonomaFire.js"></script>
+        <script src="data/perimeterCampFire.js"></script>
+        <script src="data/countiesCAboundaries.js"></script>
+        <script src="http://cdn.leafletjs.com/leaflet-0.7.2/leaflet.js"></script>
+        
+        <!-- GroupLayers -->
+        <script src="src/leaflet.groupedlayercontrol.js"></script>
+
+    
+        <script type="text/javascript">
+        // Add a basemap
+        var map = L.map("map").setView([38.15, -121.99], 7);
+          L.tileLayer(
+            "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiZ3VhcG9yZSIsImEiOiJjanBnMWc1emYwZmxzM3dxaG95YjlpeG44In0.ZCll_-ScQC2V8JMVila5HA",
+            {
+              maxZoom: 18,
+              attribution:
+                'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+                '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+              id: "mapbox.light"
+            }
+          ).addTo(map);
+
+        var bounds_group = new L.featureGroup([]);
+
+        //-----------------------------------------------
+        //ingest and configure fire perimeter layers
+        //-----------------------------------------------
+        function perimeterStyle(feature) {
+            return {
+              weight: 3,
+              opacity: 1,
+              color: 'black',
+              dashArray: "3",
+              fillOpacity: 0
+              // fillColor: "#f00"
+            };
+          }
+
+        campfireGeojson = L.geoJson(perimeterCampFire, {
+          style: perimeterStyle
+            })
+            .bindPopup('Destroyed 18,804 structures, with most of the damage occurring within the first two days. Insured damage estimated to be $7.5–10 billion; casualties estimated to include at least 86 civilians')
+            .addTo(map);
+            bounds_group.addLayer(campfireGeojson);
+            map.addLayer(campfireGeojson);
+            map.attributionControl.addAttribution(
+            'Camp Fire perimeter &copy; <a href="https://ftp.nifc.gov/public/incident_specific_data/calif_n/!CALFIRE/2018_Incidents/CA-BTU-016737_Camp/">Cal Fire</a>'
+          );
+          //-----------------------------------------------
+        sonomaGeojson = L.geoJson(perimeterSonomaFire, {
+          style: perimeterStyle
+            })
+            // .bindPopup(feature.properties.detail)
+            // .bindPopup('Merged with the Norrbom, Adobe, Partrick, Pressley, and Oakmont Fires. 1,355 structures destroyed; 3 deaths')
+            .addTo(map);
+            bounds_group.addLayer(sonomaGeojson);
+            map.addLayer(sonomaGeojson);
+            map.attributionControl.addAttribution(
+            'Sonoma Fires perimeter &copy; <a href="https://www.google.com/maps/d/u/0/viewer?ll=38.43724222548411%2C-122.4731338153872&&hl=en&mid=1TOEFA857tOVxtewW1DH6neG1Sm0&z=10">Cal Fire</a>'
+          );
+        //-----------------------------------------------
+        // ingest county layer
+        //-----------------------------------------------
+        function countyStyle(feature) {
+            return {
+              weight: 1,
+              opacity: 1,
+              color: 'black',
+              dashArray: "6",
+              fillOpacity: 0
+              // fillColor: "#f00"
+            };
+          }
+        countyGeojson = L.geoJson(countyBoundaries, {
+          style: countyStyle
+            })
+            .addTo(map);
+            bounds_group.addLayer(countyGeojson);
+            map.addLayer(countyGeojson);
+        
+
+          // Legend
+          // ********************************
+        //   var legend = L.control({ position: "bottomright" });
+        //   legend.onAdd = function(map) {
+        //     var div = L.DomUtil.create("div", "info legend"),
+        //       grades = [0,50,100,150,200],
+        //       labels = ["Good","Moderate","Unhealthy for Sensitive Groups","Unhealthy","Very Unhealthy"],
+        //       from,
+        //       to;
+        //     for (var i = 0; i < grades.length; i++) {
+        //       from = grades[i];
+        //       to = grades[i + 1];
+        //       labels.push(
+        //         '<i style="background:' +
+        //           getColor(from + 1) +
+        //           '"></i> ' +
+        //           from +
+        //           (to ? "&ndash;" + to : "+")
+        //       );
+        //     }
+        //     div.innerHTML = labels.join("<br>");
+        //     return div;
+        //   };
+        //   legend.addTo(map);
+
+        //-----------------------------------------------
+        //ingest the PM2.5 layer
+        //-----------------------------------------------
+        // control that shows info on hover
+        // ********************************
+        var info = L.control();
+          info.onAdd = function(map) {
+            this._div = L.DomUtil.create("div", "info");
+            this.update();
+            return this._div;
+          };
+          info.update = function(props) {
+            this._div.innerHTML =
+              "<h4>Air Quality Index</h4>" +
+              (props
+                ?
+                  "Zipcode: " +
+                  props.zipcode +
+                  "<br/>" +
+                  "The average AQI change between the 2017 Sonoma Fires (" +
+                  props.comparisonData_AQI_pm25sF +
+                  ") to the 2018 Camp Fire (" +
+                  props.comparisonData_AQI_pm25cF +
+                  ") was: "+
+                  props.comparisonData_Comp_pm25 
+                  
+                : "Hover over a zipcode area");
+          };
+          info.addTo(map);
+
+        // get color depending on AQI value
+        // ********************************
+        function getColor_PM25(d) {
+            return d > 100
+              ? "#ca0020"
+                : d > 50
+                ? "#ff7f00"
+                    : d > 0
+                    ? "#fb9a99"
+                      : d < 0 ? "#0571b0" : "#0571b0";
+          }
+          function style(feature) {
+            return {
+              weight: 2,
+              opacity: 0.25,
+              color: "white",
+              dashArray: "1",
+              fillOpacity: 0.65,
+              fillColor: getColor_PM25(feature.properties.comparisonData_Comp_pm25)
+            };
+          }
+          function highlightFeature(e) {
+            var layer = e.target;
+            layer.setStyle({
+              weight: 5,
+              color: "#666",
+              dashArray: "",
+              fillOpacity: 0.4
+            });
+            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+              layer.bringToFront();
+            }
+            info.update(layer.feature.properties);
+          }
+          
+          var geojson_PM25;
+          function resetHighlight(e) {
+            geojson_PM25.resetStyle(e.target);
+            info.update();
+          }
+          function zoomToFeature(e) {
+            map.fitBounds(e.target.getBounds());
+          }
+          function onEachFeature(feature, layer) {
+            layer.on({
+              mouseover: highlightFeature,
+              mouseout: resetHighlight,
+              click: zoomToFeature
+            });
+          }
+          geojson_PM25 = L.geoJson(PM25, {
+            style: style,
+            onEachFeature: onEachFeature
+          }).addTo(map);
+          bounds_group.addLayer(PM25);
+          map.attributionControl.addAttribution(
+            'Air Quality data &copy; <a href="https://docs.airnowapi.org/webservices">AirNow</a>'
+          );
+          
+        // ********************************
+        // ********************************
+        // ********************************
+        // O3
+          // info.update = function(props) {
+          //   this._div.innerHTML =
+          //     "<h4>Air Quality Index</h4>" +
+          //     (props
+          //       ?
+          //         "Zipcode: " +
+          //         props.zipcode +
+          //         "<br/>" +
+          //         "The average AQI change between the 2017 Sonoma Fires (" +
+          //         props.comparisonData_AQI_o3sF +
+          //         ") to the 2018 Camp Fire (" +
+          //         props.comparisonData_AQI_o3cF +
+          //         ") was: "+
+          //         props.comparisonData_Comp_o3 
+                  
+          //       : "Hover over a zipcode area");
+          // };
+          // info.addTo(map);
+
+          function getColor_O3(d) {
+            return d > 0
+              ? "#fddbc7"
+                : d > -10
+                ? "#d1e5f0"
+                    : d > -20
+                    ? "#92c5de"
+                      : d < -20 ? "#4393c3" : "#4393c3";
+          }
+          function style_O3(feature) {
+            return {
+              weight: 2,
+              opacity: 0.25,
+              color: "white",
+              dashArray: "1",
+              fillOpacity: 0.95,
+              fillColor: getColor_O3(feature.properties.comparisonData_Comp_o3)
+            };
+          }
+          var geojson_O3;
+          function resetHighlight(e) {
+            geojson_O3.resetStyle(e.target);
+            info.update();
+          }
+          function zoomToFeature(e) {
+            map.fitBounds(e.target.getBounds());
+          }
+          function onEachFeature(feature, layer) {
+            layer.on({
+              mouseover: highlightFeature,
+              mouseout: resetHighlight,
+              click: zoomToFeature
+            });
+          }
+          geojson_O3 = L.geoJson(O3, {
+            style: style_O3,
+            onEachFeature: onEachFeature
+          }).addTo(map);
+          bounds_group.addLayer(O3);
+
+          // var legend = L.control({ position: "bottomright" });
+          // legend.onAdd = function(map) {
+          //   var div = L.DomUtil.create("div", "info legend"),
+          //     // grades = [0,50,100,150,200],
+          //     // labels = ["Good","Moderate","Unhealthy for Sensitive Groups","Unhealthy","Very Unhealthy"],
+          //     from,
+          //     to;
+          //   for (var i = 0; i < grades.length; i++) {
+          //     from = grades[i];
+          //     to = grades[i + 1];
+          //     labels.push(
+          //       '<i style="background:' +
+          //         getColor(from + 1) +
+          //         '"></i> ' +
+          //         from +
+          //         (to ? "&ndash;" + to : "+")
+          //     );
+          //   }
+          //   div.innerHTML = labels.join("<br>");
+          //   return div;
+          // };
+          // legend.addTo(map);
+        
+
+        //-----------------------------------------------
+        // Radio Button
+        //-----------------------------------------------
+        var basemap = {}
+        var groupedOverlays = {
+          "": {
+            "County Boundaries" : countyGeojson
+          },
+          "AQI Map": {
+          "PM2.5": geojson_PM25,
+          "Ozone": geojson_O3
+          },
+          "Fire Perimeters": {
+            "Sonoma Fires": sonomaGeojson,
+            "Camp Fire": campfireGeojson
+          },
+        };
+
+        var options = {
+              // Make the "Landmarks" group exclusive (use radio inputs)
+              exclusiveGroups: ["AQI Map"],
+              // Show a checkbox next to non-exclusive group labels for toggling all
+              groupCheckboxes: false
+            };
+
+        L.control.groupedLayers(basemap,groupedOverlays,options).addTo(map);
+        //-----------------------------------------------
+        // TIMELINE
+        //-----------------------------------------------
+        // Set Filter //
+    //     var days = [
+    //       'November 8th',
+    //       'November 9th',
+    //       'November 10th',
+    //       'November 11th',
+    //       'November 12th',
+    //       'November 13th',
+    //       'November 14th',
+    //       'November 15th',
+    //       'November 16th',
+    //       'November 17th',
+    //       'November 18th'
+    //   ];
+
+    //   function filterBy(day) {
+    //       var filters = ['==', 'day', day];
+    //       map.setFilter('AQI', filters);
+    //       map.setFilter('labels', filters);
+    //       // Set the label to the month
+    //       document.getElementById('day').textContent = days[day];
+    //   }
+    //       //-----------------------------------------------
+    //     map.on('load', function() {
+          
+    //     data.features = data.features.map(function(d) {
+    //     d.properties.DateObserved = new Date(d.properties.time).getDay();
+    //         return d;
+    //     });
+
+    //     map.addSource('AQI', {
+    //         'type': 'geojson',
+    //         'data': data
+    //     });
+
+    //     // Set filter to first day
+    //     filterBy(0);
+
+    //     document.getElementById('slider').addEventListener('input', function(e) {
+    //         var days = parseInt(e.target.value, 10);
+    //         filterBy(days);
+    //     });
+    // });
+    //     var sliderControl = L.control.sliderControl({position: "topright", layer: testlayer});
+    //     //Make sure to add the slider to the map ;-)
+    //     map.addControl(sliderControl);
+    //     //And initialize the slider
+    //     sliderControl.startSlider();
+
+
+
+        </script>
+    </body>
+</html>
+
+
+
