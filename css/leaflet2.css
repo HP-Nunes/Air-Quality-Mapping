@@ -1,0 +1,219 @@
+/* div icon */
+
+.leaflet-div-icon {
+	background: #fff;
+	border: 1px solid #666;
+	}
+
+
+/* Tooltip */
+/* Base styles for the element that has a tooltip */
+.leaflet-tooltip {
+	position: absolute;
+	padding: 6px;
+	background-color: #fff;
+	border: 1px solid #fff;
+	border-radius: 3px;
+	color: #222;
+	white-space: nowrap;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-ms-user-select: none;
+	user-select: none;
+	pointer-events: none;
+	box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+	}
+.leaflet-tooltip.leaflet-clickable {
+	cursor: pointer;
+	pointer-events: auto;
+	}
+.leaflet-tooltip-top:before,
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	position: absolute;
+	pointer-events: none;
+	border: 6px solid transparent;
+	background: transparent;
+	content: "";
+	}
+
+/* Directions */
+
+.leaflet-tooltip-bottom {
+	margin-top: 6px;
+}
+.leaflet-tooltip-top {
+	margin-top: -6px;
+}
+.leaflet-tooltip-bottom:before,
+.leaflet-tooltip-top:before {
+	left: 50%;
+	margin-left: -6px;
+	}
+.leaflet-tooltip-top:before {
+	bottom: 0;
+	margin-bottom: -12px;
+	border-top-color: #fff;
+	}
+.leaflet-tooltip-bottom:before {
+	top: 0;
+	margin-top: -12px;
+	margin-left: -6px;
+	border-bottom-color: #fff;
+	}
+.leaflet-tooltip-left {
+	margin-left: -6px;
+}
+.leaflet-tooltip-right {
+	margin-left: 6px;
+}
+.leaflet-tooltip-left:before,
+.leaflet-tooltip-right:before {
+	top: 50%;
+	margin-top: -6px;
+	}
+.leaflet-tooltip-left:before {
+	right: 0;
+	margin-right: -12px;
+	border-left-color: #fff;
+	}
+.leaflet-tooltip-right:before {
+	left: 0;
+	margin-left: -12px;
+	border-right-color: #fff;
+	}
+
+/* Legend */
+/* .legend { 
+        border: 5px solid black;
+        font-weight: bold;
+        color: blue;
+        text-align: left;
+        width: 250px;
+        height: 240px;
+        line-height: 18px;
+        background: white;
+        opacity: 1;
+    }
+    .legend i {
+            width: 50px;
+            height: 50px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+    }
+    .legend square {
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            margin-top: 8px;
+	} */
+	
+/* Title */
+#title {
+  text-align: center;
+  padding-bottom: 60px;
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.d3-tip {
+  line-height: 1.5;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 0px;
+  text-align: center;
+}
+
+body {
+  font-family: 'Open Sans', sans-serif;
+  font-size: 12px;
+  font-weight: 400;
+  background-color: #fff;
+  width: 960px;
+  height: 800px;
+  margin-top: 10px;
+}
+
+#charts{
+	float: left;
+  }
+  
+  .chart {
+	height: 100px;
+	margin-bottom: 20px;
+  }
+  
+  .reset {
+	padding-left: 1em;
+	font-size: smaller;
+	color: blue;
+  }
+  
+  .background.bar {
+	fill: #ccc;
+  }
+  
+  .foreground.bar {
+	fill: steelblue;
+  }
+  
+  .axis path, .axis line {
+	fill: none;
+	stroke: #000;
+	shape-rendering: crispEdges;
+  }
+  
+  .axis text {
+	font: 10px sans-serif;
+  }
+  
+  .brush rect.extent {
+	fill: steelblue;
+	fill-opacity: .125;
+  }
+  
+  .brush .resize path {
+	fill: #eee;
+	stroke: #666;
+  }
+  
+  #chart path {
+	stroke: #fff;
+  }
+  
+  #chart path.highlighted {
+	cursor: pointer;
+  }
+  
+  .counties {
+	fill: none;
+	stroke: #C0C0C0;
+	stroke-linejoin: round;
+  }
+  
+  .q0-9 { fill:#92c5de; }
+	.q1-9 { fill:#fddbc7; }
+	.q2-9 { fill:#f4a582; }
+	.q3-9 { fill:#d6604d; }
+	.q4-9 { fill:#b2182b; }
+  
+  #map {
+	float: right;
+  }
+  
+  #map-legend{
+	text-align: center; 
+  }
+
+
+.custom .leaflet-popup-tip,
+.custom .leaflet-popup-content-wrapper {
+		background:whitesmoke;
+		box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    color: #000;
+    font-weight: bold;
+    font: 12px;
+}

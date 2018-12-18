@@ -10,17 +10,18 @@
         <title>Air Quality, San Francisco Bay Area</title>
 
         <!-- Leaflet CSS & JS-->
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.2/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.0.2/dist/leaflet.js"></script>
-        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/leaflet2.css">
+
         <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+
+        <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+        <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+
 
         <!-- d3 JavaScript -->
         <script src="https://d3js.org/d3.v4.min.js"></script>
 
-
         <!-- GroupLayers -->
-        <!-- <link rel='stylesheet' href='https://skeate.github.io/Leaflet.timeline/stylesheets/leaflet.timeline.css'> -->
         <link rel="stylesheet" href="src/leaflet.groupedlayercontrol.css" />
         
         <script>
@@ -44,8 +45,23 @@
         <body>
         <!-- The div where we will inject our map -->
         <div id="map"></div>
-        <!-- <script src="data/airnowData.js"></script> -->
-        <script src="data/PM25.js"></script>
+        
+        <div id="map">
+            <div id="map-legend">
+              <br>
+              <h3>
+              <div class="title">Average Air Quality Change in <a href = 'https://www.epa.vic.gov.au/your-environment/air/air-pollution/pm25-particles-in-air' target=_blank>PM<sub>2.5</sub>Particles</a> 
+                <br> 2017 Sonoma Fires - 2018 Camp Fires
+                <div class="title">-84% . . . . . . . . . . . . . . . . . +246%</div></h3>
+              </div>
+            </div>
+          </div>
+          <script type="text/javascript">
+            // Hack to make this example display correctly in an iframe on bl.ocks.org
+            d3.select(self.frameElement).style("height", "1000px");
+        </script> 
+
+        <script src="data/PM25_NoNulls.js"></script>
         <script src="data/O3.js"></script>
         <script src="data/perimeterSonomaFire.js"></script>
         <script src="data/perimeterCampFire.js"></script>
@@ -57,8 +73,9 @@
 
     
         <script type="text/javascript">
+        window.onload = function () {
         // Add a basemap
-        var map = L.map("map").setView([38.15, -121.99], 7);
+        var map = L.map("map").setView([38.43, -121.47], 8);
           L.tileLayer(
             "https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiZ3VhcG9yZSIsImEiOiJjanBnMWc1emYwZmxzM3dxaG95YjlpeG44In0.ZCll_-ScQC2V8JMVila5HA",
             {
@@ -70,90 +87,76 @@
               id: "mapbox.light"
             }
           ).addTo(map);
-
-        var bounds_group = new L.featureGroup([]);
-
         //-----------------------------------------------
-        //ingest and configure fire perimeter layers
+        // Icons
         //-----------------------------------------------
-        function perimeterStyle(feature) {
-            return {
-              weight: 3,
-              opacity: 1,
-              color: 'black',
-              dashArray: "3",
-              fillOpacity: 0
-              // fillColor: "#f00"
-            };
-          }
+        campfireIcon = L.icon({
+                    iconUrl: 'img/fire.svg',
+                    iconSize: [38, 95], // size of the icon
+                    popupAnchor: [0,-15],
+                    });
+                var customPopup = "Camp Fire, November 8th-25th 2018: Destroyed 18,804 structures, with most of the damage occurring within the first two days.<br> Insured damage estimated to be $7.5–10 billion; casualties estimated to include at least 86 civilians.<br/><center><br><img src='img/campFire_escape.gif' alt='' width='350px'/><br><a href = 'https://www.reddit.com/r/gifs/comments/9vltq7/escaping_the_paradise_camp_fire/' target=_blank><i>Source</i></a></br></center>";        
+                var customOptions =
+                    {
+                    'maxWidth': '500',
+                    'className' : 'custom'
+                    }
+                L.marker([39.761550, -121.621361], {icon: campfireIcon})
+                .bindPopup(customPopup,customOptions)
+                .openPopup()
+                .addTo(map);
+                map.attributionControl.addAttribution(
+                          'Fire icons &copy;<a href="https://www.flaticon.com/authors/icomoon" target=_blank title="Icomoon"> Icomoon</a>'
 
-        campfireGeojson = L.geoJson(perimeterCampFire, {
-          style: perimeterStyle
-            })
-            .bindPopup('Destroyed 18,804 structures, with most of the damage occurring within the first two days. Insured damage estimated to be $7.5–10 billion; casualties estimated to include at least 86 civilians')
-            .addTo(map);
-            bounds_group.addLayer(campfireGeojson);
-            map.addLayer(campfireGeojson);
-            map.attributionControl.addAttribution(
-            'Camp Fire perimeter &copy; <a href="https://ftp.nifc.gov/public/incident_specific_data/calif_n/!CALFIRE/2018_Incidents/CA-BTU-016737_Camp/">Cal Fire</a>'
-          );
-          //-----------------------------------------------
-        sonomaGeojson = L.geoJson(perimeterSonomaFire, {
-          style: perimeterStyle
-            })
-            // .bindPopup(feature.properties.detail)
-            // .bindPopup('Merged with the Norrbom, Adobe, Partrick, Pressley, and Oakmont Fires. 1,355 structures destroyed; 3 deaths')
-            .addTo(map);
-            bounds_group.addLayer(sonomaGeojson);
-            map.addLayer(sonomaGeojson);
-            map.attributionControl.addAttribution(
-            'Sonoma Fires perimeter &copy; <a href="https://www.google.com/maps/d/u/0/viewer?ll=38.43724222548411%2C-122.4731338153872&&hl=en&mid=1TOEFA857tOVxtewW1DH6neG1Sm0&z=10">Cal Fire</a>'
-          );
-        //-----------------------------------------------
-        // ingest county layer
-        //-----------------------------------------------
-        function countyStyle(feature) {
-            return {
-              weight: 1,
-              opacity: 1,
-              color: 'black',
-              dashArray: "6",
-              fillOpacity: 0
-              // fillColor: "#f00"
-            };
-          }
-        countyGeojson = L.geoJson(countyBoundaries, {
-          style: countyStyle
-            })
-            .addTo(map);
-            bounds_group.addLayer(countyGeojson);
-            map.addLayer(countyGeojson);
-        
+                )
 
-          // Legend
-          // ********************************
-        //   var legend = L.control({ position: "bottomright" });
-        //   legend.onAdd = function(map) {
-        //     var div = L.DomUtil.create("div", "info legend"),
-        //       grades = [0,50,100,150,200],
-        //       labels = ["Good","Moderate","Unhealthy for Sensitive Groups","Unhealthy","Very Unhealthy"],
-        //       from,
-        //       to;
-        //     for (var i = 0; i < grades.length; i++) {
-        //       from = grades[i];
-        //       to = grades[i + 1];
-        //       labels.push(
-        //         '<i style="background:' +
-        //           getColor(from + 1) +
-        //           '"></i> ' +
-        //           from +
-        //           (to ? "&ndash;" + to : "+")
-        //       );
-        //     }
-        //     div.innerHTML = labels.join("<br>");
-        //     return div;
-        //   };
-        //   legend.addTo(map);
+        nunsfireIcon = L.icon({
+                    iconUrl: 'img/fire.svg',
+                    iconSize: [38, 95], // size of the icon
+                    popupAnchor: [0,-15],
+                    });
+                var customPopup = "Nuns Fire, October 8th-30th 2017: merged with the Norrbom, Adobe, Partrick, Pressley, and Oakmont Fires. <br> 1,355 structures destroyed, 56,556 acres burned, and three casualties.<br/><center><blockquote class= 'twitter-tweet' data-lang='en'><p lang='en' dir='ltr'>A staggering comparison of the acres burned on the <a href='https://twitter.com/hashtag/NunsFire?src=hash&amp;ref_src=twsrc%5Etfw'>#NunsFire</a>, during the October siege and statewide since the beginning of 2017. <a href='https://t.co/5yaeh3kEUF' target=_blank>pic.twitter.com/5yaeh3kEUF</a></p>&mdash; CAL FIRE (@CAL_FIRE) <br>October 20, 2017</br></blockquote><script async src='https://platform.twitter.com/widgets.js' charset='utf-8'><\/script></center>";        
+                var customOptions =
+                    {
+                    'maxWidth': '500',
+                    'className' : 'custom'
+                    }
+                L.marker([38.424230, -122.556376], {icon: nunsfireIcon})
+                .bindPopup(customPopup,customOptions)
+                .openPopup()
+                .addTo(map);
+
+        atlasfireIcon = L.icon({
+                    iconUrl: 'img/fire.svg',
+                    iconSize: [38, 95], // size of the icon
+                    popupAnchor: [0,-15],
+                    });
+                var customPopup = "Atlas Peak Fire, October 8th-28th 2017: 781 structures destroyed, 120 structures damaged, and six casualties<br><center><br><img src='img/atlas.jpg' alt='' width='350px'/><br><a href = 'https://www.washingtonpost.com/news/post-nation/wp/2017/10/09/these-images-show-the-devastation-caused-by-californias-deadly-wine-country-fires/?noredirect=on&utm_term=.ef9ac8f5a153' target=_blank><i>Source</i></a></br></center>";        
+                var customOptions =
+                    {
+                    'maxWidth': '500',
+                    'className' : 'custom'
+                    }
+                L.marker([38.429164, -122.246769], {icon: atlasfireIcon})
+                .bindPopup(customPopup,customOptions)
+                .openPopup()
+                .addTo(map);
+
+          tubbsfireIcon = L.icon({
+                    iconUrl: 'img/fire.svg',
+                    iconSize: [38, 95], // size of the icon
+                    popupAnchor: [0,-15],
+                    });
+                var customPopup = "Tubbs Fire, October 8th-31st 2017: 5,643 structures destroyed, 317 structures damaged, 1 injured<br/><center><blockquote class='twitter-tweet' data-lang='en'><p lang='en' dir='ltr'>One year ago today, I was immersed in the most destructive fire in California history. When I watched the <a href='https://twitter.com/hashtag/tubbsfire?src=hash&amp;ref_src=twsrc%5Etfw'>#tubbsfire</a> hop Hwy 128 at Bennet Lane and roar through Franz Valley, I knew <a href='https://twitter.com/hashtag/santarosa?src=hash&amp;ref_src=twsrc%5Etfw'>#santarosa</a> was in trouble. This clip is from Fountaingrove. <a href='https://twitter.com/NorthBayNews?ref_src=twsrc%5Etfw'>@NorthBayNews</a> <a href='https://t.co/hQqikrL4yr' target=_blank>pic.twitter.com/hQqikrL4yr</a></p>&mdash; Kent Porter (@kentphotos) <br>October 8, 2018</br></blockquote><script async src='https://platform.twitter.com/widgets.js' charset='utf-8'><\/script></center>";        
+                var customOptions =
+                    {
+                    'maxWidth': '500',
+                    'className' : 'custom'
+                    }
+                L.marker([38.509164, -122.716977], {icon: tubbsfireIcon})
+                .bindPopup(customPopup,customOptions)
+                .openPopup()
+                .addTo(map);
 
         //-----------------------------------------------
         //ingest the PM2.5 layer
@@ -171,15 +174,15 @@
               "<h4>Air Quality Index</h4>" +
               (props
                 ?
-                  "Zipcode: " +
-                  props.zipcode +
+                  props.NAME + " County" + " [zipcode: " +
+                  props.zipcode + "]"+
                   "<br/>" +
-                  "The average AQI change between the 2017 Sonoma Fires (" +
-                  props.comparisonData_AQI_pm25sF +
-                  ") to the 2018 Camp Fire (" +
-                  props.comparisonData_AQI_pm25cF +
-                  ") was: "+
-                  props.comparisonData_Comp_pm25 
+                  " Air quality changed by an average of <b>" 
+                  + props.pm25diff 
+                  + "%</b> between the 2017 Sonoma Fires (" 
+                  + props.pm25_sf + " AQI" + 
+                  ") and the 2018 Camp Fire (" +
+                  props.pm25_cf + " AQI)"
                   
                 : "Hover over a zipcode area");
           };
@@ -188,13 +191,15 @@
         // get color depending on AQI value
         // ********************************
         function getColor_PM25(d) {
-            return d > 100
-              ? "#ca0020"
-                : d > 50
-                ? "#ff7f00"
-                    : d > 0
-                    ? "#fb9a99"
-                      : d < 0 ? "#0571b0" : "#0571b0";
+            return d > 200
+              ? "#b2182b"
+                : d > 150
+                ? "#d6604d"
+                    : d > 100
+                      ? "#f4a582"
+                      : d > 0
+                        ? "#fddbc7"
+                          : d < 0 ? "#92c5de" : "#92c5de";
           }
           function style(feature) {
             return {
@@ -203,7 +208,7 @@
               color: "white",
               dashArray: "1",
               fillOpacity: 0.65,
-              fillColor: getColor_PM25(feature.properties.comparisonData_Comp_pm25)
+              fillColor: getColor_PM25(feature.properties.pm25diff)
             };
           }
           function highlightFeature(e) {
@@ -239,13 +244,39 @@
             style: style,
             onEachFeature: onEachFeature
           }).addTo(map);
-          bounds_group.addLayer(PM25);
           map.attributionControl.addAttribution(
             'Air Quality data &copy; <a href="https://docs.airnowapi.org/webservices">AirNow</a>'
           );
+
+        //-----------------------------------------------
+        //ingest and configure fire perimeter layers
+        //-----------------------------------------------
+        function perimeterStyle(feature) {
+            return {
+              weight: 3,
+              opacity: 1,
+              color: 'black',
+              dashArray: "3",
+              fillOpacity: 0
+            };
+          }
+
+        campfireGeojson = L.geoJson(perimeterCampFire, {
+          style: perimeterStyle
+            })
+            map.attributionControl.addAttribution(
+            'Camp Fire perimeter &copy; <a href="https://ftp.nifc.gov/public/incident_specific_data/calif_n/!CALFIRE/2018_Incidents/CA-BTU-016737_Camp/">Cal Fire</a>'
+          );
+
+        sonomaGeojson = L.geoJson(perimeterSonomaFire, {
+          style: perimeterStyle
+            })
+            map.attributionControl.addAttribution(
+            'Sonoma Fires perimeter &copy; <a href="https://www.google.com/maps/d/u/0/viewer?ll=38.43724222548411%2C-122.4731338153872&&hl=en&mid=1TOEFA857tOVxtewW1DH6neG1Sm0&z=10">Cal Fire</a>'
+          );
           
         // ********************************
-        // ********************************
+        // Ozone: separate map if choropleth toggle doesn't pan out
         // ********************************
         // O3
           // info.update = function(props) {
@@ -267,149 +298,79 @@
           // };
           // info.addTo(map);
 
-          function getColor_O3(d) {
-            return d > 0
-              ? "#fddbc7"
-                : d > -10
-                ? "#d1e5f0"
-                    : d > -20
-                    ? "#92c5de"
-                      : d < -20 ? "#4393c3" : "#4393c3";
-          }
-          function style_O3(feature) {
-            return {
-              weight: 2,
-              opacity: 0.25,
-              color: "white",
-              dashArray: "1",
-              fillOpacity: 0.95,
-              fillColor: getColor_O3(feature.properties.comparisonData_Comp_o3)
-            };
-          }
-          var geojson_O3;
-          function resetHighlight(e) {
-            geojson_O3.resetStyle(e.target);
-            info.update();
-          }
-          function zoomToFeature(e) {
-            map.fitBounds(e.target.getBounds());
-          }
-          function onEachFeature(feature, layer) {
-            layer.on({
-              mouseover: highlightFeature,
-              mouseout: resetHighlight,
-              click: zoomToFeature
-            });
-          }
-          geojson_O3 = L.geoJson(O3, {
-            style: style_O3,
-            onEachFeature: onEachFeature
-          }).addTo(map);
-          bounds_group.addLayer(O3);
-
-          // var legend = L.control({ position: "bottomright" });
-          // legend.onAdd = function(map) {
-          //   var div = L.DomUtil.create("div", "info legend"),
-          //     // grades = [0,50,100,150,200],
-          //     // labels = ["Good","Moderate","Unhealthy for Sensitive Groups","Unhealthy","Very Unhealthy"],
-          //     from,
-          //     to;
-          //   for (var i = 0; i < grades.length; i++) {
-          //     from = grades[i];
-          //     to = grades[i + 1];
-          //     labels.push(
-          //       '<i style="background:' +
-          //         getColor(from + 1) +
-          //         '"></i> ' +
-          //         from +
-          //         (to ? "&ndash;" + to : "+")
-          //     );
-          //   }
-          //   div.innerHTML = labels.join("<br>");
-          //   return div;
-          // };
-          // legend.addTo(map);
+          // function getColor_O3(d) {
+          //   return d > 0
+          //     ? "#fddbc7"
+          //       : d > -10
+          //       ? "#d1e5f0"
+          //           : d > -20
+          //           ? "#92c5de"
+          //             : d < -20 ? "#4393c3" : "#4393c3";
+          // }
+          // function style_O3(feature) {
+          //   return {
+          //     weight: 2,
+          //     opacity: 0.25,
+          //     color: "white",
+          //     dashArray: "1",
+          //     fillOpacity: 0.95,
+          //     fillColor: getColor_O3(feature.properties.comparisonData_Comp_o3)
+          //   };
+          // }
+          // var geojson_O3;
+          // function resetHighlight(e) {
+          //   geojson_O3.resetStyle(e.target);
+          //   info.update();
+          // }
+          // function zoomToFeature(e) {
+          //   map.fitBounds(e.target.getBounds());
+          // }
+          // function onEachFeature(feature, layer) {
+          //   layer.on({
+          //     mouseover: highlightFeature,
+          //     mouseout: resetHighlight,
+          //     click: zoomToFeature
+          //   });
+          // }
+          // geojson_O3 = L.geoJson(O3, {
+          //   style: style_O3,
+          //   onEachFeature: onEachFeature
+          // }).addTo(map);
+          // bounds_group.addLayer(O3);
         
+
+        //----------------------------------
+        // LEGEND - lower right corner
+        //----------------------------------
+        var legend = d3.select("#map-legend").
+        append("svg:svg").
+        attr("width", 120).
+        attr("height", 20)
+        for (var i = 0; i <= 4; i++) {
+          legend.append("svg:rect").
+          attr("x", i*20).
+          attr("height", 10).
+          attr("width", 20).
+          attr("class", "q" + i + "-9 ");//color
+          };
 
         //-----------------------------------------------
         // Radio Button
         //-----------------------------------------------
         var basemap = {}
         var groupedOverlays = {
-          "": {
-            "County Boundaries" : countyGeojson
-          },
-          "AQI Map": {
-          "PM2.5": geojson_PM25,
-          "Ozone": geojson_O3
-          },
-          "Fire Perimeters": {
+            "Fire Perimeters": {
             "Sonoma Fires": sonomaGeojson,
             "Camp Fire": campfireGeojson
           },
         };
 
         var options = {
-              // Make the "Landmarks" group exclusive (use radio inputs)
-              exclusiveGroups: ["AQI Map"],
-              // Show a checkbox next to non-exclusive group labels for toggling all
               groupCheckboxes: false
             };
 
-        L.control.groupedLayers(basemap,groupedOverlays,options).addTo(map);
-        //-----------------------------------------------
-        // TIMELINE
-        //-----------------------------------------------
-        // Set Filter //
-    //     var days = [
-    //       'November 8th',
-    //       'November 9th',
-    //       'November 10th',
-    //       'November 11th',
-    //       'November 12th',
-    //       'November 13th',
-    //       'November 14th',
-    //       'November 15th',
-    //       'November 16th',
-    //       'November 17th',
-    //       'November 18th'
-    //   ];
-
-    //   function filterBy(day) {
-    //       var filters = ['==', 'day', day];
-    //       map.setFilter('AQI', filters);
-    //       map.setFilter('labels', filters);
-    //       // Set the label to the month
-    //       document.getElementById('day').textContent = days[day];
-    //   }
-    //       //-----------------------------------------------
-    //     map.on('load', function() {
-          
-    //     data.features = data.features.map(function(d) {
-    //     d.properties.DateObserved = new Date(d.properties.time).getDay();
-    //         return d;
-    //     });
-
-    //     map.addSource('AQI', {
-    //         'type': 'geojson',
-    //         'data': data
-    //     });
-
-    //     // Set filter to first day
-    //     filterBy(0);
-
-    //     document.getElementById('slider').addEventListener('input', function(e) {
-    //         var days = parseInt(e.target.value, 10);
-    //         filterBy(days);
-    //     });
-    // });
-    //     var sliderControl = L.control.sliderControl({position: "topright", layer: testlayer});
-    //     //Make sure to add the slider to the map ;-)
-    //     map.addControl(sliderControl);
-    //     //And initialize the slider
-    //     sliderControl.startSlider();
-
-
+        L.control.groupedLayers(basemap,groupedOverlays,options).addTo(map)};
+        
 
         </script>
     </body>
